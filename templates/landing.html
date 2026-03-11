@@ -1,0 +1,407 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Support Ticket Analyzer — AI-Powered Customer Support Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body class="landing">
+    <!-- 1. NAVBAR -->
+    <header class="landing-nav">
+        <div class="landing-nav-inner">
+            <a href="{% url 'accounts:landing' %}" class="landing-logo">AI Support Ticket Analyzer</a>
+            <nav class="landing-nav-links">
+                <a href="#product">Product</a>
+                <a href="#features">Features</a>
+                <a href="#ai-engine">AI Engine</a>
+                <a href="#knowledge-base">Knowledge Base</a>
+                <a href="#pricing">Pricing</a>
+            </nav>
+            <div class="landing-nav-actions">
+                <a href="{% url 'accounts:login' %}" class="landing-btn landing-btn-ghost">Sign In</a>
+                <a href="{% url 'accounts:role_select' %}" class="landing-btn landing-btn-primary">Try Demo</a>
+            </div>
+            <button type="button" class="landing-nav-toggle" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- 2. HERO SECTION -->
+        <section id="product" class="landing-hero">
+            <div class="landing-hero-inner">
+                <div class="landing-hero-content">
+                    <h1 class="landing-hero-title">Transform Customer Support with AI-Powered Ticket Intelligence</h1>
+                    <p class="landing-hero-sub">Analyze, categorize, and resolve support tickets faster using AI sentiment analysis, automated routing, and role-based workflows.</p>
+                    {% if messages %}
+                        <div class="landing-alert-wrap" aria-live="polite">
+                            {% for message in messages %}
+                                <div class="landing-alert">{{ message }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <form class="landing-hero-cta" action="{% url 'accounts:landing' %}" method="post">
+                        {% csrf_token %}
+                        <input type="email" name="email" placeholder="Enter your work email" class="landing-hero-input" required>
+                        <button type="submit" class="landing-btn landing-btn-primary landing-btn-lg">Request Demo</button>
+                    </form>
+                </div>
+                <div class="landing-hero-visual">
+                    <div class="landing-dashboard-preview">
+                        <div class="landing-preview-header">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="landing-preview-body">
+                            <div class="landing-preview-sidebar"></div>
+                            <div class="landing-preview-main">
+                                <div class="landing-preview-card"></div>
+                                <div class="landing-preview-card"></div>
+                                <div class="landing-preview-card"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. TRUSTED PLATFORM -->
+        <section class="landing-trust">
+            <p class="landing-trust-text">Built for modern customer support teams</p>
+            <div class="landing-trust-icons">
+                <div class="landing-trust-item">
+                    <span class="landing-trust-icon">🤖</span>
+                    <span>AI Analysis</span>
+                </div>
+                <div class="landing-trust-item">
+                    <span class="landing-trust-icon">📋</span>
+                    <span>Smart Ticket Routing</span>
+                </div>
+                <div class="landing-trust-item">
+                    <span class="landing-trust-icon">🔔</span>
+                    <span>Real-Time Notifications</span>
+                </div>
+                <div class="landing-trust-item">
+                    <span class="landing-trust-icon">📚</span>
+                    <span>Knowledge Base Integration</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. CORE FEATURES -->
+        <section id="features" class="landing-section landing-features">
+            <h2 class="landing-section-title">Core Features</h2>
+            <p class="landing-section-sub">Everything you need to run support at scale</p>
+            <div class="landing-cards">
+                <article class="landing-card">
+                    <div class="landing-card-icon">🤖</div>
+                    <h3>AI Ticket Analysis</h3>
+                    <p>Automatically detect ticket sentiment (positive, neutral, negative) and suggest category and priority using AI.</p>
+                </article>
+                <article class="landing-card">
+                    <div class="landing-card-icon">📋</div>
+                    <h3>Smart Ticket Management</h3>
+                    <p>Manage tickets with statuses like Open, Assigned, In Progress, Resolved, Closed, and Reopened.</p>
+                </article>
+                <article class="landing-card">
+                    <div class="landing-card-icon">👥</div>
+                    <h3>Role-Based Workflow</h3>
+                    <p>Customers create tickets, agents resolve them, managers assign tickets, and admins manage the system.</p>
+                </article>
+                <article class="landing-card">
+                    <div class="landing-card-icon">✅</div>
+                    <h3>Approval System</h3>
+                    <p>Secure registration with approval workflows for Customers, Agents, and Managers.</p>
+                </article>
+                <article class="landing-card">
+                    <div class="landing-card-icon">📚</div>
+                    <h3>Knowledge Base</h3>
+                    <p>Customers can search articles before creating tickets to reduce support load.</p>
+                </article>
+                <article class="landing-card">
+                    <div class="landing-card-icon">🔔</div>
+                    <h3>Notifications System</h3>
+                    <p>Real-time alerts for new tickets, updates, assignments, and resolutions.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- 5. DASHBOARD PREVIEW -->
+        <section id="dashboards" class="landing-section landing-dashboard">
+            <div class="landing-dashboard-grid">
+                <div class="landing-dashboard-content">
+                    <h2 class="landing-section-title">Role-Based Dashboards</h2>
+                    <ul class="landing-dashboard-list">
+                        <li>
+                            <strong>Customer Dashboard</strong> — Submit tickets, track status, view replies and knowledge base.
+                        </li>
+                        <li>
+                            <strong>Agent Dashboard</strong> — Work assigned queue, reply to customers, update ticket status.
+                        </li>
+                        <li>
+                            <strong>Manager Dashboard</strong> — Assign tickets, monitor SLAs, approve registrations, review analytics.
+                        </li>
+                        <li>
+                            <strong>Admin Dashboard</strong> — Manage users, roles, categories, SLAs, channels, and integrations.
+                        </li>
+                    </ul>
+                </div>
+                <div class="landing-dashboard-preview-wrap">
+                    <div class="landing-dashboard-preview-2">
+                        <div class="landing-preview-header">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="landing-preview-body">
+                            <div class="landing-preview-sidebar"></div>
+                            <div class="landing-preview-main">
+                                <div class="landing-preview-row"></div>
+                                <div class="landing-preview-row"></div>
+                                <div class="landing-preview-row"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. AI ENGINE -->
+        <section id="ai-engine" class="landing-section landing-ai">
+            <div class="landing-ai-bg"></div>
+            <div class="landing-ai-inner">
+                <h2 class="landing-section-title">Built-in AI Ticket Intelligence</h2>
+                <p class="landing-section-sub">Natural language processing for smarter support</p>
+                <ul class="landing-ai-features">
+                    <li>Sentiment analysis using natural language processing</li>
+                    <li>Automatic category suggestions</li>
+                    <li>Priority detection from ticket text</li>
+                    <li>AI-powered insights for support teams</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 7. WORKFLOW -->
+        <section class="landing-section landing-workflow">
+            <h2 class="landing-section-title">Support Flow</h2>
+            <p class="landing-section-sub">From ticket creation to resolution</p>
+            <div class="landing-timeline">
+                <div class="landing-timeline-step">
+                    <span class="landing-timeline-dot">1</span>
+                    <p>Customer creates ticket</p>
+                </div>
+                <div class="landing-timeline-arrow">→</div>
+                <div class="landing-timeline-step">
+                    <span class="landing-timeline-dot">2</span>
+                    <p>Manager assigns ticket</p>
+                </div>
+                <div class="landing-timeline-arrow">→</div>
+                <div class="landing-timeline-step">
+                    <span class="landing-timeline-dot">3</span>
+                    <p>Agent resolves ticket</p>
+                </div>
+                <div class="landing-timeline-arrow">→</div>
+                <div class="landing-timeline-step">
+                    <span class="landing-timeline-dot">4</span>
+                    <p>System analyzes sentiment</p>
+                </div>
+                <div class="landing-timeline-arrow">→</div>
+                <div class="landing-timeline-step">
+                    <span class="landing-timeline-dot">5</span>
+                    <p>Manager reviews analytics</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. STATISTICS -->
+        <section class="landing-section landing-stats">
+            <div class="landing-stats-grid">
+                <div class="landing-stat">
+                    <span class="landing-stat-value">80%</span>
+                    <span class="landing-stat-label">Faster Ticket Resolution</span>
+                </div>
+                <div class="landing-stat">
+                    <span class="landing-stat-value">60%</span>
+                    <span class="landing-stat-label">Automation</span>
+                </div>
+                <div class="landing-stat">
+                    <span class="landing-stat-value">95%</span>
+                    <span class="landing-stat-label">Customer Satisfaction</span>
+                </div>
+                <div class="landing-stat">
+                    <span class="landing-stat-value">100%</span>
+                    <span class="landing-stat-label">Role-Based Security</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. KNOWLEDGE BASE -->
+        <section id="knowledge-base" class="landing-section landing-kb">
+            <h2 class="landing-section-title">Knowledge Base</h2>
+            <p class="landing-section-sub">Search help articles before creating a ticket</p>
+            <div class="landing-kb-preview">
+                <div class="landing-kb-search-wrap">
+                    <span class="landing-kb-search-icon">🔍</span>
+                    <input type="text" placeholder="Search help articles..." class="landing-kb-search" readonly>
+                </div>
+                <p class="landing-kb-hint">Reduce support load by deflecting common questions with searchable articles.</p>
+            </div>
+        </section>
+
+        <!-- 10. PRICING (anchor for nav) -->
+        <section id="pricing" class="landing-section landing-pricing">
+            <h2 class="landing-section-title">Simple Pricing</h2>
+            <p class="landing-section-sub">Get started with AI-powered support management</p>
+            <div class="landing-pricing-cards">
+                <div class="landing-pricing-card">
+                    <h3>Free Trial</h3>
+                    <p class="landing-pricing-price">Try it free</p>
+                    <ul>
+                        <li>Full feature access</li>
+                        <li>AI sentiment analysis</li>
+                        <li>Role-based dashboards</li>
+                    </ul>
+                    <a href="{% url 'accounts:role_select' %}" class="landing-btn landing-btn-primary">Get Started</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 11. CTA -->
+        <section class="landing-section landing-cta">
+            <h2 class="landing-cta-title">Start Managing Support Tickets with AI Today</h2>
+            <div class="landing-cta-buttons">
+                <a href="{% url 'accounts:role_select' %}" class="landing-btn landing-btn-primary landing-btn-lg">Try Demo</a>
+                <a href="https://github.com" class="landing-btn landing-btn-ghost landing-btn-lg" target="_blank" rel="noopener">View GitHub Project</a>
+            </div>
+        </section>
+
+        <!-- 12. DOCUMENTATION -->
+        <section id="documentation" class="landing-section landing-docs">
+            <h2 class="landing-section-title">Documentation</h2>
+            <p class="landing-section-sub">Quick guidance for running and using the platform.</p>
+            <div class="landing-cards">
+                <article class="landing-card">
+                    <div class="landing-card-icon">🚀</div>
+                    <h3>Getting started</h3>
+                    <p>Run migrations, create an admin, configure categories/SLAs, then onboard managers, agents, and customers.</p>
+                </article>
+                <article class="landing-card">
+                    <div class="landing-card-icon">🧭</div>
+                    <h3>Workflows</h3>
+                    <p>Customers submit tickets, managers assign, agents resolve, and customers can provide CSAT feedback.</p>
+                </article>
+                <article class="landing-card">
+                    <div class="landing-card-icon">🔐</div>
+                    <h3>Roles & approvals</h3>
+                    <p>Customer/Agent registrations require manager approval. Support Managers require admin approval.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- 13. SUPPORT -->
+        <section id="support" class="landing-section landing-support">
+            <h2 class="landing-section-title">Support</h2>
+            <p class="landing-section-sub">Need help? Here’s how to get assistance.</p>
+            <div class="landing-cards">
+                <article class="landing-card">
+                    <div class="landing-card-icon">💬</div>
+                    <h3>In-app workflow</h3>
+                    <p>Create a ticket using the Web form channel and include screenshots/logs. Agents can reply and request more details.</p>
+                </article>
+                <article class="landing-card">
+                    <div class="landing-card-icon">📚</div>
+                    <h3>Knowledge Base first</h3>
+                    <p>Search the knowledge base for common issues (password reset, login troubleshooting, account recovery).</p>
+                </article>
+                <article class="landing-card">
+                    <div class="landing-card-icon">⏱️</div>
+                    <h3>SLAs</h3>
+                    <p>Admins can define response/resolution targets by priority to keep support performance on track.</p>
+                </article>
+            </div>
+        </section>
+
+        <!-- 14. CONTACT -->
+        <section id="contact" class="landing-section landing-contact">
+            <h2 class="landing-section-title">Contact</h2>
+            <p class="landing-section-sub">For demos, onboarding, or questions.</p>
+            <div class="landing-contact-card">
+                <div>
+                    <div class="landing-contact-title">Sales & onboarding</div>
+                    <div class="landing-contact-sub">Use the “Request Demo” form above to share your email and we’ll follow up.</div>
+                </div>
+                <a href="#product" class="landing-btn landing-btn-primary">Back to top</a>
+            </div>
+        </section>
+
+        <!-- 15. PRIVACY -->
+        <section id="privacy" class="landing-section landing-privacy">
+            <h2 class="landing-section-title">Privacy</h2>
+            <p class="landing-section-sub">How we handle your data in this demo environment.</p>
+            <div class="landing-privacy-card">
+                <p class="landing-privacy-text">
+                    This project is a demo environment for ticket workflow and analytics. Avoid uploading sensitive personal data.
+                    Attachments and ticket content are stored in the app database/storage for demonstration purposes.
+                </p>
+                <p class="landing-privacy-text muted">
+                    Admins can manage users, roles, and configuration. Use least-privilege access and deactivate accounts that should not have access.
+                </p>
+            </div>
+        </section>
+
+        <!-- 11. FOOTER -->
+        <footer class="landing-footer">
+            <div class="landing-footer-inner">
+                <div class="landing-footer-col">
+                    <h4>Product</h4>
+                    <a href="#features">Features</a>
+                    <a href="#ai-engine">AI Engine</a>
+                    <a href="#knowledge-base">Knowledge Base</a>
+                </div>
+                <div class="landing-footer-col">
+                    <h4>Resources</h4>
+                    <a href="#documentation">Documentation</a>
+                    <a href="#support">Support</a>
+                </div>
+                <div class="landing-footer-col">
+                    <h4>Company</h4>
+                    <a href="#features">About</a>
+                    <a href="#contact">Contact</a>
+                    <a href="#privacy">Privacy</a>
+                </div>
+            </div>
+            <div class="landing-footer-bottom">
+                <small>&copy; {% now 'Y' %} AI Support Ticket Analyzer. All rights reserved.</small>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        (function() {
+            var toggle = document.querySelector('.landing-nav-toggle');
+            var links = document.querySelector('.landing-nav-links');
+            if (toggle && links) {
+                toggle.addEventListener('click', function() {
+                    links.classList.toggle('is-open');
+                    toggle.classList.toggle('is-open');
+                });
+            }
+            document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+                a.addEventListener('click', function(e) {
+                    var id = this.getAttribute('href');
+                    if (id === '#') return;
+                    var el = document.querySelector(id);
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                        links && links.classList.remove('is-open');
+                        toggle && toggle.classList.remove('is-open');
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

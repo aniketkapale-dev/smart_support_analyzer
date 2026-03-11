@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Support Analyzer{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <header class="top-nav">
+        <div class="brand">
+            <a href="{% url 'accounts:landing' %}" style="color:inherit;text-decoration:none;">AI Support Ticket Analyzer</a>
+        </div>
+        <nav>
+            <a href="{% url 'dashboard:home' %}">Dashboard</a>
+            <a href="{% url 'tickets:list' %}">Tickets</a>
+            <a href="{% url 'knowledgebase:list' %}">Knowledge Base</a>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'notifications:center' %}">🔔 Notifications</a>
+                {% if request.user.is_staff %}
+                    <a href="{% url 'dashboard:manager_approve_registrations' %}">Approvals</a>
+                    <a href="{% url 'dashboard:manager_teams' %}">Teams</a>
+                {% endif %}
+                {% if request.user.is_superuser %}
+                    <a href="{% url 'dashboard:admin_users_roles' %}">Admin</a>
+                {% endif %}
+                <a href="{% url 'accounts:logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}">Login</a>
+            {% endif %}
+        </nav>
+    </header>
+    <main class="page">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="page-footer">
+        <small>&copy; {% now 'Y' %} Smart Support Analyzer</small>
+    </footer>
+</body>
+</html>
+

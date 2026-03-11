@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket configuration · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<h2>Ticket configuration</h2>
+<p class="muted">
+    Manage ticket categories, priority levels, and the status workflow. SLAs define response and resolution targets.
+</p>
+
+<section class="card-grid">
+    <article class="card">
+        <div class="card-title">Categories</div>
+        <p class="card-sub">
+            Simple labels for grouping tickets such as Billing, Technical, Account, or General.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="category">
+            <div>
+                <label for="id_name">New category name</label>
+                <input id="id_name" type="text" name="name" required>
+            </div>
+            <div style="margin-top:0.5rem;">
+                <label for="id_description">Description (optional)</label>
+                <textarea id="id_description" name="description"></textarea>
+            </div>
+            <div style="margin-top:0.75rem;">
+                <button type="submit" class="btn">Add category</button>
+            </div>
+        </form>
+        <h4 style="margin-top:1rem;">Existing categories</h4>
+        {% if categories %}
+        <table class="table" style="margin-top:.5rem;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th style="width:260px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in categories %}
+                <tr>
+                    <td>
+                        <form method="post" class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="category_update">
+                            <input type="hidden" name="category_id" value="{{ c.id }}">
+                            <input type="text" name="name" value="{{ c.name }}" required>
+                    </td>
+                    <td>
+                            <input type="text" name="description" value="{{ c.description }}">
+                    </td>
+                    <td>
+                            <button type="submit" class="btn btn-ghost">Save</button>
+                        </form>
+                        <form method="post" style="display:inline;" onsubmit="return confirm('Delete category {{ c.name }}?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="category_delete">
+                            <input type="hidden" name="category_id" value="{{ c.id }}">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="muted">No categories yet.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <div class="card-title">Priority levels</div>
+        <p class="card-sub">
+            Tickets use four priority levels. These are used for sorting, dashboards, and SLA policies.
+        </p>
+        <ul class="card-sub">
+            {% for key,label in priority_choices %}
+                <li><strong>{{ label }}</strong> <span class="muted">({{ key }})</span></li>
+            {% endfor %}
+        </ul>
+        <p class="muted" style="margin-top:.75rem;">
+            Tip: Configure SLA targets per priority in the “Service level policies” card.
+        </p>
+    </article>
+
+    <article class="card">
+        <div class="card-title">Service level policies</div>
+        <p class="card-sub">
+            Define target first-response and resolution times for each priority.
+        </p>
+        <form method="post" style="margin-bottom:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="sla_preset">
+            <input type="hidden" name="preset" value="standard">
+            <button type="submit" class="btn btn-ghost">Apply preset: High 1h · Medium 4h · Low 24h</button>
+        </form>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="sla">
+            {{ sla_form.as_p }}
+            <button type="submit" class="btn">Save SLA policy</button>
+        </form>
+        <h4 style="margin-top:1rem;">Existing policies</h4>
+        {% if sla_policies %}
+        <table class="table" style="margin-top:.5rem;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Priority</th>
+                    <th>First response</th>
+                    <th>Resolution</th>
+                    <th>Active</th>
+                    <th style="width:220px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sla in sla_policies %}
+                <tr>
+                    <td><strong>{{ sla.name }}</strong></td>
+                    <td>{{ sla.get_priority_display }}</td>
+                    <td>{{ sla.target_first_response_minutes }}m</td>
+                    <td>{{ sla.target_resolution_minutes }}m</td>
+                    <td>
+                        {% if sla.is_active %}
+                            <span class="status-badge status-open">Active</span>
+                        {% else %}
+                            <span class="status-badge status-closed">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="sla_toggle">
+                                <input type="hidden" name="sla_id" value="{{ sla.id }}">
+                                <button type="submit" class="btn {% if sla.is_active %}btn-danger{% else %}btn{% endif %}">
+                                    {% if sla.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                            <form method="post" onsubmit="return confirm('Delete SLA policy {{ sla.name }}?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="sla_delete">
+                                <input type="hidden" name="sla_id" value="{{ sla.id }}">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="muted">No SLA policies yet.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <div class="card-title">Status workflow</div>
+        <p class="card-sub">
+            Define allowed status transitions for agents/managers. Default workflow:
+            <strong>Open → Assigned → In Progress → Resolved → Closed</strong>
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="transition">
+            {{ transition_form.as_p }}
+            <button type="submit" class="btn">Add transition</button>
+        </form>
+
+        <h4 style="margin-top:1rem;">Existing transitions</h4>
+        {% if transitions %}
+        <table class="table" style="margin-top:.5rem;">
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Active</th>
+                    <th style="width:120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transitions %}
+                <tr>
+                    <td>{{ t.get_from_status_display }}</td>
+                    <td>{{ t.get_to_status_display }}</td>
+                    <td>{{ t.is_active|yesno:"Yes,No" }}</td>
+                    <td>
+                        <form method="post" onsubmit="return confirm('Delete this transition?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="transition_delete">
+                            <input type="hidden" name="transition_id" value="{{ t.id }}">
+                            <button type="submit" class="btn btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="muted">No transitions configured yet.</p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}
+

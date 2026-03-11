@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Request · AI Support Ticket Analyzer{% endblock %}
+
+{% block content %}
+<h2>Submit Request</h2>
+<p class="muted">
+    If the Knowledge Base didn't solve your issue, submit a support request below. Your ticket will get an ID like <strong>TKT-1024</strong> so you can track it.
+</p>
+
+<form method="post" enctype="multipart/form-data" class="ticket-create-form">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="{{ form.subject.id_for_label }}">Subject</label>
+        {{ form.subject }}
+        <span class="form-hint">e.g. Payment failed</span>
+    </div>
+    <div class="form-group">
+        <label for="{{ form.description.id_for_label }}">Description</label>
+        {{ form.description }}
+        <span class="form-hint">e.g. My payment is deducted but order not confirmed</span>
+    </div>
+    <div class="form-group">
+        <label for="{{ form.category.id_for_label }}">Category</label>
+        {{ form.category }}
+        <span class="form-hint">e.g. Billing</span>
+    </div>
+    <div class="form-group">
+        <label for="{{ form.priority.id_for_label }}">Priority</label>
+        {{ form.priority }}
+    </div>
+    <div class="form-group">
+        <label for="id_attachments">Attachments</label>
+        <input id="id_attachments" type="file" name="attachments" multiple accept="image/*,.pdf,.doc,.docx">
+        <span class="form-hint">e.g. screenshot.png — optional</span>
+    </div>
+    {% if form.tags %}
+    <div class="form-group">
+        <label for="{{ form.tags.id_for_label }}">Tags (optional)</label>
+        {{ form.tags }}
+    </div>
+    {% endif %}
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Submit Request</button>
+    </div>
+</form>
+
+<p class="muted" style="margin-top:1rem;">
+    <a href="{% url 'knowledgebase:list' %}">Search Knowledge Base first</a> — you might find an answer without creating a ticket.
+</p>
+{% endblock %}
+

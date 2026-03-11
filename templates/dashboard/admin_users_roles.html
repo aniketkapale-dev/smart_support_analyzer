@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Users &amp; Roles · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<h2>Users &amp; roles</h2>
+<p class="muted">
+    Overview of all users and their primary roles. Create new accounts, change primary role, or remove users.
+    For very advanced permission editing, you can still use the Django admin.
+</p>
+
+<section class="card-grid">
+    <article class="card">
+        <div class="card-title">Create user</div>
+        <p class="card-sub">
+            Create a new account and assign a primary role. The user will be able to sign in immediately.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            {{ create_form.as_p }}
+            <button type="submit" class="btn">Create user</button>
+        </form>
+    </article>
+</section>
+
+<h3 style="margin-top:1.5rem;">Existing users</h3>
+<table class="table" style="margin-top:0.75rem;">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Primary role</th>
+            <th>Active</th>
+            <th>Staff</th>
+            <th>Superuser</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email|default:"—" }}</td>
+            <td>
+                <form method="post" class="stack-h">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_role">
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    <select name="role">
+                        {% for key,label in role_choices %}
+                            <option value="{{ key }}" {% if user.primary_role == key %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-ghost">Update</button>
+                </form>
+            </td>
+            <td>
+                {% if user.is_active %}
+                    <span class="status-badge status-open">Active</span>
+                {% else %}
+                    <span class="status-badge status-closed">Inactive</span>
+                {% endif %}
+            </td>
+            <td>{{ user.is_staff|yesno:"Yes,No" }}</td>
+            <td>{{ user.is_superuser|yesno:"Yes,No" }}</td>
+            <td>
+                {% if request.user.id != user.id %}
+                <div class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+                    <a class="btn btn-ghost" href="{% url 'dashboard:admin_user_edit' user.id %}">Edit</a>
+
+                    <form method="post" onsubmit="return confirm('Change active status for this user?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="toggle_active">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <button type="submit" class="btn {% if user.is_active %}btn-danger{% else %}btn{% endif %}">
+                            {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
+                        </button>
+                    </form>
+
+                    <form method="post" onsubmit="return confirm('Delete this user?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+                {% else %}
+                <span class="muted">This is you</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% if users_page.has_other_pages %}
+<div class="table-pagination">
+    <span class="pagination-info muted">
+        Page {{ users_page.number }} of {{ users_page.paginator.num_pages }}
+    </span>
+    <div class="pagination-buttons">
+        {% if users_page.has_previous %}
+            <a class="btn btn-ghost" href="?page={{ users_page.previous_page_number }}">Previous</a>
+        {% endif %}
+        {% if users_page.has_next %}
+            <a class="btn btn-ghost" href="?page={{ users_page.next_page_number }}">Next</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Knowledge Base · AI Support Ticket Analyzer{% endblock %}
+
+{% block content %}
+<h2>Knowledge Base</h2>
+<p class="muted" style="margin-top:0.25rem; margin-bottom:1rem;">
+    Type your issue in the search box below. If an article solves your problem, you don't need to create a ticket.
+</p>
+<p class="muted" style="margin-bottom:1rem;">
+    Example: <em>"How to reset my password?"</em> — the system will show articles like Reset password steps, Account recovery, and Login troubleshooting.
+</p>
+
+<form method="get" class="kb-search-form" style="margin-bottom:1.5rem;">
+    <label for="kb-search" class="visually-hidden">Search for help</label>
+    <input
+        id="kb-search"
+        type="search"
+        name="q"
+        value="{{ query }}"
+        placeholder="e.g. How to reset my password?"
+        style="max-width:32rem; padding:0.75rem 1rem; width:100%;"
+    >
+    <button type="submit" style="margin-left:0.5rem; padding:0.75rem 1.25rem;">Search</button>
+</form>
+
+{% if query %}
+    <p class="muted" style="margin-bottom:0.75rem;">
+        {% if articles %}
+            Found {{ articles|length }} article{{ articles|length|pluralize }}.
+        {% else %}
+            No articles matched your search. Try different words (e.g. "password", "login", "refund") or
+            <a href="{% url 'tickets:create' %}">create a support ticket</a>.
+        {% endif %}
+    </p>
+{% endif %}
+
+{% if articles %}
+    <div class="card-grid">
+        {% for article in articles %}
+            <article class="card">
+                <div class="card-title">
+                    <a href="{% url 'knowledgebase:detail' article.pk %}?q={{ query|urlencode }}" class="link-quiet">
+                        {{ article.title }}
+                    </a>
+                </div>
+                <p class="card-sub">
+                    {% if article.category %}
+                        {{ article.category.name }}
+                    {% else %}
+                        Uncategorized
+                    {% endif %}
+                    {% if article.tags.exists %} · {% for tag in article.tags.all %}{{ tag.name }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
+                    · {{ article.created_at|date:"Y-m-d" }}
+                </p>
+            </article>
+        {% endfor %}
+    </div>
+{% elif not query %}
+    <p class="muted">Enter your issue above to see relevant articles (e.g. "How to reset my password?", "Request a refund").</p>
+{% endif %}
+
+<p style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid #e2e8f0;">
+    <strong>Still need help?</strong>
+    <a href="{% url 'tickets:create' %}">Create a support ticket</a> and our team will assist you.
+</p>
+{% endblock %}
+

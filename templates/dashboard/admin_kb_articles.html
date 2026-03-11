@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Knowledge Base · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<div class="stack-h" style="justify-content:space-between; gap:1rem; align-items:center;">
+    <div>
+        <h2>Knowledge Base</h2>
+        <p class="muted">Create, edit, and publish articles that help customers solve issues before creating tickets.</p>
+    </div>
+</div>
+
+<section class="card-grid" style="margin-top:1rem;">
+    <article class="card">
+        <div class="card-title">Create article</div>
+        <p class="card-sub">
+            Example: <strong>Reset Password</strong> · Category <strong>Account Issues</strong> · Tags <strong>login, password</strong> · Status <strong>Published</strong>
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="create">
+            {{ form.as_p }}
+            <button type="submit" class="btn">Create article</button>
+        </form>
+    </article>
+</section>
+
+<h3 style="margin-top:1.5rem;">Articles</h3>
+{% if articles %}
+<table class="table" style="margin-top:.75rem;">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Tags</th>
+            <th>Status</th>
+            <th>Updated</th>
+            <th style="width:320px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for a in articles %}
+        <tr>
+            <td><strong>{{ a.title }}</strong></td>
+            <td>{{ a.category.name|default:"—" }}</td>
+            <td class="muted">
+                {% for t in a.tags.all %}
+                    <span class="ai-chip">{{ t.name }}</span>
+                {% empty %}
+                    —
+                {% endfor %}
+            </td>
+            <td>
+                {% if a.is_published %}
+                    <span class="status-badge status-open">Published</span>
+                {% else %}
+                    <span class="status-badge status-closed">Unpublished</span>
+                {% endif %}
+            </td>
+            <td class="muted">{{ a.updated_at|date:"M j, Y H:i" }}</td>
+            <td>
+                <div class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+                    <a class="btn btn-ghost" href="{% url 'dashboard:admin_kb_article_edit' a.id %}">Edit</a>
+
+                    <form method="post" onsubmit="return confirm('Change publish state for this article?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="toggle_publish">
+                        <input type="hidden" name="article_id" value="{{ a.id }}">
+                        <button type="submit" class="btn {% if a.is_published %}btn-danger{% else %}btn{% endif %}">
+                            {% if a.is_published %}Unpublish{% else %}Publish{% endif %}
+                        </button>
+                    </form>
+
+                    <form method="post" onsubmit="return confirm('Delete this article?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="form_type" value="delete">
+                        <input type="hidden" name="article_id" value="{{ a.id }}">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="muted">No articles yet.</p>
+{% endif %}
+
+<p style="margin-top:1rem;">
+    <a href="{% url 'dashboard:home' %}" class="link-quiet">← Back to dashboard</a>
+</p>
+{% endblock %}
+

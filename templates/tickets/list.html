@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket queue · AI Support Ticket Analyzer{% endblock %}
+
+{% block content %}
+<div class="tickets-list-header">
+    <h2>{% if list_filter %}{{ list_filter }}{% else %}{% if is_agent or is_manager %}Ticket queue{% else %}My tickets{% endif %}{% endif %}</h2>
+    {% if is_customer %}
+    <a href="{% url 'tickets:create' %}" class="btn btn-primary">+ New ticket</a>
+    {% endif %}
+</div>
+
+<p class="tickets-list-intro muted">
+    {% if is_agent or is_manager %}
+    Find important tickets quickly. High-priority tickets appear first. Use filters to narrow by status, priority, agent, or category.
+    {% else %}
+    Track your support requests below. Click a ticket to view details and replies.
+    {% endif %}
+</p>
+
+{% if is_customer %}
+    <h3 style="margin-top:1.25rem;">Active tickets</h3>
+    {% if active_tickets %}
+    <div class="tickets-table-wrap">
+        <table class="tickets-table">
+            <thead>
+                <tr>
+                    <th>Ticket ID</th>
+                    <th>Subject</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for ticket in active_tickets %}
+                <tr class="ticket-row {% if ticket.priority == 'urgent' or ticket.priority == 'high' %}ticket-row-priority-high{% endif %}">
+                    <td class="ticket-id-cell"><a href="{% url 'tickets:detail' ticket.ticket_id %}" class="ticket-id-link">{{ ticket.ticket_id }}</a></td>
+                    <td class="ticket-subject-cell"><a href="{% url 'tickets:detail' ticket.ticket_id %}" class="ticket-subject-link">{{ ticket.subject }}</a></td>
+                    <td class="ticket-priority-cell"><span class="priority-badge priority-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span></td>
+                    <td class="ticket-status-cell"><span class="status-badge status-badge-{{ ticket.status }}"><span class="status-badge-dot"></span>{{ ticket.get_status_display }}</span></td>
+                    <td class="ticket-date-cell muted">{{ ticket.created_at|date:"M j, Y H:i" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="muted">No active tickets.</p>
+    {% endif %}
+
+    <h3 style="margin-top:1.75rem;">History / Archive</h3>
+    <p class="muted" style="margin-top:-0.25rem;">Resolved and closed tickets are stored here.</p>
+    {% if history_tickets %}
+    <div class="tickets-table-wrap">
+        <table class="tickets-table">
+            <thead>
+                <tr>
+                    <th>Ticket ID</th>
+                    <th>Subject</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for ticket in history_tickets %}
+                <tr class="ticket-row">
+                    <td class="ticket-id-cell"><a href="{% url 'tickets:detail' ticket.ticket_id %}" class="ticket-id-link">{{ ticket.ticket_id }}</a></td>
+                    <td class="ticket-subject-cell"><a href="{% url 'tickets:detail' ticket.ticket_id %}" class="ticket-subject-link">{{ ticket.subject }}</a></td>
+                    <td class="ticket-priority-cell"><span class="priority-badge priority-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span></td>
+                    <td class="ticket-status-cell"><span class="status-badge status-badge-{{ ticket.status }}"><span class="status-badge-dot"></span>{{ ticket.get_status_display }}</span></td>
+                    <td class="ticket-date-cell muted">{{ ticket.updated_at|date:"M j, Y H:i" }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="muted">No history yet.</p>
+    {% endif %}
+
+{% else %}
+{% if show_queue_filters %}
+<div class="ticket-queue-filters">
+    <form method="get" class="queue-filters-form">
+        {% if request.GET.assigned %}<input type="hidden" name="assigned" value="{{ request.GET.assigned }}">{% endif %}
+        {% if request.GET.priority %}<input type="hidden" name="priority" value="{{ request.GET.priority }}">{% endif %}
+        <label class="filter-label">Status</label>
+        <select name="status" class="filter-select" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="open" {% if filter_status == 'open' %}selected{% endif %}>Open</option>
+            <option value="assigned" {% if filter_status == 'assigned' %}selected{% endif %}>Assigned</option>
+            <option value="in_progress" {% if filter_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+            <option value="waiting_for_customer" {% if filter_status == 'waiting_for_customer' %}selected{% endif %}>Pending (Waiting for Customer)</option>
+            <option value="escalated" {% if filter_status == 'escalated' %}selected{% endif %}>Escalated to Manager</option>
+            <option value="resolved" {% if filter_status == 'resolved' %}selected{% endif %}>Resolved</option>
+            <option value="closed" {% if filter_status == 'closed' %}selected{% endif %}>Closed</option>
+            <option value="reopened" {% if filter_status == 'reopened' %}selected{% endif %}>Reopened</option>
+        </select>
+        <label class="filter-label">Priority</label>
+        <select name="priority" class="filter-select" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="urgent" {% if filter_priority == 'urgent' %}selected{% endif %}>Urgent</option>
+            <option value="high" {% if filter_priority == 'high' %}selected{% endif %}>High</option>
+            <option value="medium" {% if filter_priority == 'medium' %}selected{% endif %}>Medium</option>
+            <option value="low" {% if filter_priority == 'low' %}selected{% endif %}>Low</option>
+        </select>
+        <label class="filter-label">Assigned agent</label>
+        <select name="agent" class="filter-select" onchange="this.form.submit()">
+            <option value="">All</option>
+            <option value="unassigned" {% if filter_agent == 'unassigned' %}selected{% endif %}>Unassigned</option>
+            {% for a in filter_agents %}
+            <option value="{{ a.id }}" {% if filter_agent_id == a.id %}selected{% endif %}>{{ a.username }}</option>
+            {% endfor %}
+        </select>
+        <label class="filter-label">Category</label>
+        <select name="category" class="filter-select" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for c in filter_categories %}
+            <option value="{{ c.id }}" {% if filter_category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-ghost filter-btn">Apply</button>
+        <a href="{% url 'tickets:list' %}" class="btn btn-ghost filter-clear">Clear</a>
+    </form>
+</div>
+{% endif %}
+
+{% if tickets %}
+<div class="tickets-table-wrap">
+    <table class="tickets-table queue-table">
+        <thead>
+            <tr>
+                <th>Ticket ID</th>
+                <th>Subject</th>
+                {% if is_agent or is_manager %}<th>Customer</th>{% endif %}
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for ticket in tickets %}
+            <tr class="ticket-row {% if ticket.priority == 'urgent' or ticket.priority == 'high' %}ticket-row-priority-high{% endif %}">
+                <td class="ticket-id-cell">
+                    <a href="{% url 'tickets:detail' ticket.ticket_id %}" class="ticket-id-link">
+                        {{ ticket.ticket_id }}
+                    </a>
+                </td>
+                <td class="ticket-subject-cell">
+                    <a href="{% url 'tickets:detail' ticket.ticket_id %}" class="ticket-subject-link">
+                        {{ ticket.subject }}
+                    </a>
+                </td>
+                {% if is_agent or is_manager %}
+                <td class="ticket-customer-cell">
+                    {{ ticket.customer.username }}
+                </td>
+                {% endif %}
+                <td class="ticket-priority-cell">
+                    <span class="priority-badge priority-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span>
+                </td>
+                <td class="ticket-status-cell">
+                    <span class="status-badge status-badge-{{ ticket.status }}" title="{{ ticket.get_status_display }}">
+                        <span class="status-badge-dot"></span>
+                        {{ ticket.get_status_display }}
+                    </span>
+                </td>
+                <td class="ticket-date-cell muted">
+                    {{ ticket.created_at|date:"M j, Y H:i" }}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if tickets_page and tickets_page.has_other_pages %}
+<div class="table-pagination">
+    <span class="pagination-info muted">
+        Page {{ tickets_page.number }} of {{ tickets_page.paginator.num_pages }}
+    </span>
+    <div class="pagination-buttons">
+        {% if tickets_page.has_previous %}
+            <a class="btn btn-ghost" href="?page={{ tickets_page.previous_page_number }}">Previous</a>
+        {% endif %}
+        {% if tickets_page.has_next %}
+            <a class="btn btn-ghost" href="?page={{ tickets_page.next_page_number }}">Next</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div class="tickets-legend">
+    <span class="legend-title">Status:</span>
+    <span class="status-badge status-badge-open"><span class="status-badge-dot"></span> Open</span>
+    <span class="status-badge status-badge-assigned"><span class="status-badge-dot"></span> Assigned</span>
+    <span class="status-badge status-badge-in_progress"><span class="status-badge-dot"></span> In Progress</span>
+    <span class="status-badge status-badge-waiting_for_customer"><span class="status-badge-dot"></span> Pending (Waiting for Customer)</span>
+    <span class="status-badge status-badge-escalated"><span class="status-badge-dot"></span> Escalated to Manager</span>
+    <span class="status-badge status-badge-resolved"><span class="status-badge-dot"></span> Resolved</span>
+    <span class="status-badge status-badge-closed"><span class="status-badge-dot"></span> Closed</span>
+    <span class="status-badge status-badge-reopened"><span class="status-badge-dot"></span> Reopened</span>
+</div>
+{% else %}
+<div class="tickets-empty">
+    <p class="muted">No tickets match your filters.{% if show_queue_filters %} Try clearing filters.{% endif %}</p>
+    {% if is_customer %}
+    <a href="{% url 'tickets:create' %}" class="btn btn-primary">Create your first ticket</a>
+    {% else %}
+    <a href="{% url 'tickets:list' %}" class="btn btn-ghost">View all tickets</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endif %}
+
+{% endblock %}

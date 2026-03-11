@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Register · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<h2>Register as {{ role_key|title }}</h2>
+<p class="muted">
+    Create an account. Your registration must be approved before you can sign in:
+    {% if role_key == "manager" %}Support Manager accounts are approved by an Administrator.
+    {% else %}Customer and Support Agent accounts are approved by a Support Manager.{% endif %}
+</p>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="role" value="{{ role_key }}">
+    <div>
+        <label for="id_username">Username</label><br>
+        <input id="id_username" type="text" name="username" required maxlength="150">
+    </div>
+    <div style="margin-top: 0.75rem;">
+        <label for="id_email">Email</label><br>
+        <input id="id_email" type="email" name="email">
+    </div>
+    <div style="margin-top: 0.75rem;">
+        <label for="id_password">Password</label><br>
+        <input id="id_password" type="password" name="password" required>
+    </div>
+    <div style="margin-top: 0.75rem;">
+        <label for="id_confirm_password">Confirm password</label><br>
+        <input id="id_confirm_password" type="password" name="confirm_password" required>
+    </div>
+    <div style="margin-top: 1rem;">
+        <button type="submit" class="btn">Register</button>
+    </div>
+</form>
+
+<p class="muted" style="margin-top: 1rem;">
+    Register as:
+    {% for key, label in register_roles %}
+        {% if key != role_key %}<a href="{% url 'accounts:register' %}?role={{ key }}">{{ label }}</a>{% if not forloop.last %} · {% endif %}{% endif %}
+    {% endfor %}
+</p>
+<p class="muted" style="margin-top: 0.5rem;">
+    Already have an account? <a href="{% url 'accounts:login' %}?role={{ role_key }}" class="link-quiet">Sign in</a>
+</p>
+{% endblock %}

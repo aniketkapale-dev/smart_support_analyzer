@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<h2>Notifications</h2>
+
+{% if notifications %}
+    <ul class="card-sub" style="margin-top:1rem;">
+        {% for n in notifications %}
+            <li style="margin-bottom:0.4rem;">
+                {% if n.ticket %}
+                    <a href="{% url 'tickets:detail' n.ticket.ticket_id %}" class="link-quiet">
+                        {{ n.message }}
+                    </a>
+                {% else %}
+                    {{ n.message }}
+                {% endif %}
+                <span class="muted">
+                    · {{ n.created_at|date:"Y-m-d H:i" }}
+                </span>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p class="muted" style="margin-top:1rem;">No notifications right now.</p>
+{% endif %}
+{% endblock %}
+

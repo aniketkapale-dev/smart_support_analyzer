@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Teams · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-text">
+        <h1>Teams</h1>
+        <p class="muted">
+            Create teams that represent functional groups (Billing, Technical, Delivery). Then manage members on the Teams management page.
+        </p>
+    </div>
+</section>
+
+<section class="card-grid">
+    <article class="card">
+        <div class="card-title">Create team</div>
+        <p class="card-sub">
+            Example teams: <strong>Billing</strong>, <strong>Technical Support</strong>, <strong>Delivery</strong>, <strong>VIP Care</strong>.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_team">
+            <div class="form-group">
+                <label for="id_team_name">Team name</label>
+                <input id="id_team_name" type="text" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="id_team_description">Description (optional)</label>
+                <textarea id="id_team_description" name="description" rows="2" placeholder="e.g. Handles all billing and payment-related issues."></textarea>
+            </div>
+            <button type="submit" class="btn">Create team</button>
+        </form>
+    </article>
+    <article class="card">
+        <div class="card-title">Manage existing teams</div>
+        <p class="card-sub">
+            View all teams, add or remove Support Agents from each team, and adjust memberships.
+        </p>
+        <a href="{% url 'dashboard:manager_teams_manage' %}" class="btn btn-ghost">Open team management →</a>
+    </article>
+</section>
+
+<p style="margin-top:1rem;">
+    <a href="{% url 'dashboard:home' %}" class="link-quiet">← Back to dashboard</a>
+</p>
+{% endblock %}
+

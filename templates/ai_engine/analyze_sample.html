@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}AI Engine · Sample Analysis{% endblock %}
+
+{% block content %}
+<h2>Sample Ticket Analysis</h2>
+<p><strong>Text:</strong> {{ sample_text }}</p>
+<p class="muted">
+    Sentiment: {{ analysis.sentiment }} · Intent: {{ analysis.intent }}
+    (placeholder – wired up to real models later)
+</p>
+{% endblock %}
+

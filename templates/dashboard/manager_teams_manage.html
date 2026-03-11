@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Teams · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-text">
+        <h1>Manage Teams</h1>
+        <p class="muted">
+            View existing teams and manage which Support Agents belong to each one.
+        </p>
+    </div>
+</section>
+
+<h2 style="margin-top:1.5rem;">Existing teams</h2>
+{% if teams %}
+<div class="card-grid" style="margin-top:0.75rem;">
+    {% for team in teams %}
+    <article class="card">
+        <div class="card-title">{{ team.name }}</div>
+        {% if team.description %}
+        <p class="card-sub">{{ team.description }}</p>
+        {% else %}
+        <p class="card-sub muted">No description yet.</p>
+        {% endif %}
+
+        <h4 style="margin-top:0.75rem;">Agents in this team</h4>
+        {% if team.agent_members.all %}
+        <ul class="card-sub">
+            {% for profile in team.agent_members.all %}
+            <li class="stack-h" style="justify-content:space-between; gap:.5rem;">
+                <span>{{ profile.user.username }}</span>
+                <form method="post" onsubmit="return confirm('Remove {{ profile.user.username }} from {{ team.name }}?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="remove_agent">
+                    <input type="hidden" name="profile_id" value="{{ profile.id }}">
+                    <input type="hidden" name="team_id" value="{{ team.id }}">
+                    <button type="submit" class="link-button">Remove</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No agents assigned yet.</p>
+        {% endif %}
+
+        <h4 style="margin-top:0.75rem;">Add agents</h4>
+        <form method="post" class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_agent">
+            <input type="hidden" name="team_id" value="{{ team.id }}">
+            <select name="agent_ids" multiple required class="select-multi">
+                {% for a in agents %}
+                    <option value="{{ a.id }}">{{ a.username }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-ghost">Add selected</button>
+        </form>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<p class="muted" style="margin-top:0.75rem;">No teams yet. Use the Teams page to create your first team.</p>
+{% endif %}
+
+<p style="margin-top:1rem;">
+    <a href="{% url 'dashboard:manager_teams' %}" class="link-quiet">← Back to Teams</a>
+</p>
+{% endblock %}
+

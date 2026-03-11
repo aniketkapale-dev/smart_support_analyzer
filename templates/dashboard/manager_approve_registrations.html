@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Approve registrations · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<h2>Approve registrations</h2>
+<p class="muted">
+    Customer and Support Agent self-registrations require your approval before they can sign in.
+</p>
+
+{% if pending %}
+<table class="table" style="margin-top:1rem;">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Requested</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for a in pending %}
+        <tr>
+            <td>{{ a.user.username }}</td>
+            <td>{{ a.user.email|default:"—" }}</td>
+            <td>{{ a.get_requested_role_display }}</td>
+            <td>{{ a.created_at|date:"M j, Y H:i" }}</td>
+            <td>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="approve">
+                    <input type="hidden" name="approval_id" value="{{ a.id }}">
+                    <button type="submit" class="btn">Approve</button>
+                </form>
+                <form method="post" style="display:inline; margin-left:0.5rem;" onsubmit="return confirm('Reject this registration?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reject">
+                    <input type="hidden" name="approval_id" value="{{ a.id }}">
+                    <button type="submit" class="btn btn-danger">Reject</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="muted">No pending Customer or Support Agent registrations.</p>
+{% endif %}
+
+<p style="margin-top:1rem;"><a href="{% url 'dashboard:home' %}" class="link-quiet">← Back to dashboard</a></p>
+{% endblock %}

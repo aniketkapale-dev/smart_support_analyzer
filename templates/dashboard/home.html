@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · AI Support Ticket Analyzer{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-text">
+        <h1>
+            {% if is_admin %}
+                Admin dashboard
+            {% elif is_manager %}
+                Manager dashboard
+            {% elif is_agent %}
+                Agent dashboard
+            {% else %}
+                Ticket overview
+            {% endif %}
+        </h1>
+        <p class="muted">
+            {% if is_agent %}
+                Your workspace — see what needs attention at a glance.
+            {% else %}
+                Overview of ticket volume, sentiment, and knowledge base activity for {{ scope_label|lower }}.
+            {% endif %}
+        </p>
+        <div class="hero-chip-row">
+            <span class="hero-chip">Total: {{ ticket_stats.total }}</span>
+            <span class="hero-chip">Open: {{ ticket_stats.open }}</span>
+            <span class="hero-chip">High priority: {{ ticket_stats.high_priority }}</span>
+        </div>
+        {% if is_admin %}
+        <div class="hero-chip-row" style="margin-top:0.4rem;">
+            <span class="hero-chip">Admin: users &amp; roles</span>
+            <span class="hero-chip">SLA policies</span>
+            <span class="hero-chip">Channels &amp; integrations</span>
+        </div>
+        {% endif %}
+        {% if is_manager and not is_admin %}
+        <div class="hero-chip-row" style="margin-top:0.4rem;">
+            <a href="{% url 'dashboard:manager_approve_registrations' %}" class="hero-chip link-quiet">Approve Customer / Agent registrations</a>
+        </div>
+        {% endif %}
+        {% if is_agent %}
+        <div class="hero-chip-row" style="margin-top:0.4rem;">
+            <a href="{% url 'tickets:list' %}" class="hero-chip link-quiet">Go to my tickets →</a>
+            <a href="{% url 'notifications:center' %}" class="hero-chip link-quiet">🔔 Notifications</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+{% if is_agent and agent_metrics %}
+<section class="agent-workspace">
+    <h2 class="agent-workspace-title">Agent workspace</h2>
+    <p class="muted agent-workspace-intro">Quick view of what needs your attention.</p>
+    <div class="agent-metrics-grid">
+        <a href="{% url 'tickets:list' %}?assigned=me" class="agent-metric-card">
+            <span class="agent-metric-value">{{ agent_metrics.my_tickets }}</span>
+            <span class="agent-metric-label">My tickets</span>
+            <span class="agent-metric-hint">Assigned to you</span>
+        </a>
+        <a href="{% url 'tickets:list' %}?assigned=unassigned" class="agent-metric-card">
+            <span class="agent-metric-value">{{ agent_metrics.unassigned_tickets }}</span>
+            <span class="agent-metric-label">Unassigned tickets</span>
+            <span class="agent-metric-hint">Need assignment</span>
+        </a>
+        <a href="{% url 'tickets:list' %}?priority=urgent" class="agent-metric-card agent-metric-card-urgent">
+            <span class="agent-metric-value">{{ agent_metrics.urgent_tickets }}</span>
+            <span class="agent-metric-label">Urgent tickets</span>
+            <span class="agent-metric-hint">High / urgent priority</span>
+        </a>
+        <div class="agent-metric-card agent-metric-card-success">
+            <span class="agent-metric-value">{{ agent_metrics.resolved_today }}</span>
+            <span class="agent-metric-label">Resolved today</span>
+            <span class="agent-metric-hint">Performance</span>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if is_manager and manager_metrics %}
+<section class="manager-workspace">
+    <h2 class="agent-workspace-title">Manager workspace</h2>
+    <p class="muted agent-workspace-intro">Monitor the global queue and decide who should handle what.</p>
+    <div class="agent-metrics-grid">
+        <a href="{% url 'tickets:list' %}?agent=unassigned" class="agent-metric-card">
+            <span class="agent-metric-value">{{ manager_metrics.unassigned }}</span>
+            <span class="agent-metric-label">Unassigned tickets</span>
+            <span class="agent-metric-hint">Needs assignment</span>
+        </a>
+        <a href="{% url 'tickets:list' %}?priority=high_urgent" class="agent-metric-card agent-metric-card-urgent">
+            <span class="agent-metric-value">{{ manager_metrics.high_priority }}</span>
+            <span class="agent-metric-label">High priority</span>
+            <span class="agent-metric-hint">High / urgent</span>
+        </a>
+        <a href="{% url 'tickets:list' %}?sentiment=negative" class="agent-metric-card">
+            <span class="agent-metric-value">{{ manager_metrics.negative_sentiment }}</span>
+            <span class="agent-metric-label">Negative sentiment</span>
+            <span class="agent-metric-hint">Needs attention</span>
+        </a>
+        <a href="{% url 'tickets:list' %}?sla_risk=1" class="agent-metric-card">
+            <span class="agent-metric-value">{{ manager_metrics.sla_risk }}</span>
+            <span class="agent-metric-label">SLA risk</span>
+            <span class="agent-metric-hint">Near deadline</span>
+        </a>
+    </div>
+
+    <div class="card-grid" style="margin-top:1rem;">
+        <article class="card">
+            <div class="card-title">Review queue</div>
+            <p class="card-sub">
+                Open the full ticket queue with filters for status, priority, agent, and category.
+            </p>
+            <a href="{% url 'tickets:list' %}" class="link-quiet">Go to ticket queue →</a>
+        </article>
+        <article class="card">
+            <div class="card-title">Analytics</div>
+            <p class="card-sub">
+                Scroll further down this dashboard to see ticket analytics and per-agent performance.
+            </p>
+            <a href="#manager-analytics" class="link-quiet">Jump to analytics ↓</a>
+        </article>
+    </div>
+</section>
+{% endif %}
+
+{% if is_manager and manager_analytics and tickets_per_agent %}
+<section id="manager-analytics" class="agent-workspace" style="margin-top:1.5rem;">
+    <h2 class="agent-workspace-title">Ticket analytics</h2>
+    <p class="muted agent-workspace-intro">Operational metrics to improve support performance.</p>
+    <div class="agent-metrics-grid">
+        <div class="agent-metric-card agent-metric-card-success">
+            <span class="agent-metric-value">{{ manager_analytics.resolved_today_total }}</span>
+            <span class="agent-metric-label">Tickets resolved today</span>
+            <span class="agent-metric-hint">All queues</span>
+        </div>
+        <div class="agent-metric-card">
+            <span class="agent-metric-value">{% if manager_analytics.avg_resolution_hours %}{{ manager_analytics.avg_resolution_hours }}{% else %}—{% endif %}</span>
+            <span class="agent-metric-label">Avg. resolution time (hrs)</span>
+            <span class="agent-metric-hint">Resolved/closed tickets</span>
+        </div>
+        <div class="agent-metric-card">
+            <span class="agent-metric-value">{{ manager_analytics.negative_pct }}%</span>
+            <span class="agent-metric-label">Negative sentiment (backlog)</span>
+            <span class="agent-metric-hint">Trend indicator</span>
+        </div>
+        <div class="agent-metric-card">
+            <span class="agent-metric-value">{{ manager_analytics.backlog_size }}</span>
+            <span class="agent-metric-label">Backlog size</span>
+            <span class="agent-metric-hint">Active tickets</span>
+        </div>
+    </div>
+
+    <h3 class="agent-notifications-title" style="margin-top:1rem;">Tickets per agent</h3>
+    <div class="tickets-table-wrap" style="margin-top:0.75rem;">
+        <table class="tickets-table">
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th>Backlog</th>
+                    <th>Resolved today</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in tickets_per_agent %}
+                <tr class="ticket-row">
+                    <td>{{ a.username }}</td>
+                    <td>{{ a.backlog }}</td>
+                    <td>{{ a.resolved_today }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p class="muted" style="margin-top:0.5rem;">
+        Use these metrics to spot backlog buildup, sentiment issues, and workload imbalance across agents.
+    </p>
+</section>
+{% endif %}
+
+{% if is_admin and admin_metrics %}
+<section class="agent-workspace" style="margin-top:1.5rem;">
+    <h2 class="agent-workspace-title">Admin system health</h2>
+    <p class="muted agent-workspace-intro">Overall platform status and key totals.</p>
+    <div class="agent-metrics-grid">
+        <div class="agent-metric-card">
+            <span class="agent-metric-value">{{ admin_metrics.total_users }}</span>
+            <span class="agent-metric-label">Total users</span>
+            <span class="agent-metric-hint">All roles</span>
+        </div>
+        <div class="agent-metric-card">
+            <span class="agent-metric-value">{{ admin_metrics.agents }}</span>
+            <span class="agent-metric-label">Active agents</span>
+            <span class="agent-metric-hint">Support Agent</span>
+        </div>
+        <div class="agent-metric-card">
+            <span class="agent-metric-value">{{ admin_metrics.managers }}</span>
+            <span class="agent-metric-label">Managers</span>
+            <span class="agent-metric-hint">Support Manager</span>
+        </div>
+        <div class="agent-metric-card agent-metric-card-urgent">
+            <span class="agent-metric-value">{{ admin_metrics.open_tickets }}</span>
+            <span class="agent-metric-label">Open tickets</span>
+            <span class="agent-metric-hint">System-wide</span>
+        </div>
+    </div>
+
+    {% if system_notifications %}
+    <h3 class="agent-notifications-title" style="margin-top:1rem;">System notifications</h3>
+    <ul class="agent-notifications-list">
+        {% for n in system_notifications %}
+        <li class="agent-notification-item">
+            <a href="{% if n.ticket %}{% url 'tickets:detail' n.ticket.ticket_id %}{% else %}{% url 'notifications:center' %}{% endif %}" class="link-quiet">
+                {{ n.message }}
+            </a>
+            <span class="muted">{{ n.created_at|timesince }} ago</span>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</section>
+{% endif %}
+
+<section class="card-grid">
+    <article class="card">
+        <div class="card-title">Ticket stats</div>
+        <p class="card-sub">
+            Closed: {{ ticket_stats.closed }}<br>
+            Avg. resolution:
+            {% if ticket_stats.avg_resolution_hours %}
+                {{ ticket_stats.avg_resolution_hours }}h
+            {% else %}
+                n/a
+            {% endif %}
+        </p>
+        <a href="{% url 'tickets:list' %}" class="link-quiet">Go to tickets →</a>
+    </article>
+
+    <article class="card">
+        <div class="card-title">Sentiment</div>
+        {% if sentiment_distribution %}
+            <ul class="card-sub">
+                {% for row in sentiment_distribution %}
+                    <li>{{ row.sentiment|default:"Unknown" }} – {{ row.count }}</li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="card-sub">No sentiment data yet.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <div class="card-title">Recent tickets</div>
+        {% if recent_tickets %}
+            <ul class="card-sub">
+                {% for t in recent_tickets %}
+                    <li>
+                        <a href="{% url 'tickets:detail' t.ticket_id %}" class="link-quiet">
+                            {{ t.ticket_id }} — {{ t.subject }}
+                        </a>
+                        <span class="muted">
+                            · {{ t.get_status_display }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="card-sub">No tickets yet.</p>
+        {% endif %}
+    </article>
+</section>
+
+{% if is_manager %}
+<section class="card-grid" style="margin-top:1.5rem;">
+    <article class="card">
+        <div class="card-title">Approve registrations</div>
+        <p class="card-sub">
+            Customer and Support Agent self-registrations require your approval before they can sign in.
+        </p>
+        <a href="{% url 'dashboard:manager_approve_registrations' %}" class="link-quiet">Review pending registrations →</a>
+    </article>
+    <article class="card">
+        <div class="card-title">Teams</div>
+        <p class="card-sub">
+            Create teams (Billing, Technical, Delivery) and assign agents to them for easier ticket routing.
+        </p>
+        <a href="{% url 'dashboard:manager_teams' %}" class="link-quiet">Manage teams →</a>
+    </article>
+</section>
+{% endif %}
+
+{% if is_admin %}
+        <p class="card-sub">
+            Support Managers who self-register must be approved by an Administrator before they can sign in.
+        </p>
+        <a href="{% url 'dashboard:admin_approve_managers' %}" class="link-quiet">Review pending Support Manager registrations →</a>
+    </article>
+    <article class="card">
+        <div class="card-title">User &amp; role management</div>
+        <p class="card-sub">
+            Manage users, groups, and role assignments for customers, agents, managers, and admins.
+        </p>
+        <a href="{% url 'dashboard:admin_users_roles' %}" class="link-quiet">Open user &amp; role console →</a>
+    </article>
+    <article class="card">
+        <div class="card-title">Ticket configuration</div>
+        <p class="card-sub">
+            Configure categories, tags, priorities, and service level policies that drive ticket routing and SLAs.
+        </p>
+        <a href="{% url 'dashboard:admin_ticket_config' %}" class="link-quiet">Manage categories &amp; SLAs →</a>
+    </article>
+    <article class="card">
+        <div class="card-title">Channels &amp; integrations</div>
+        <p class="card-sub">
+            Enable or disable support channels and external integrations such as Slack, email, or Jira.
+        </p>
+        <a href="{% url 'dashboard:admin_channels_integrations' %}" class="link-quiet">Manage channels &amp; integrations →</a>
+    </article>
+</section>
+{% endif %}
+{% endblock %}
+
+

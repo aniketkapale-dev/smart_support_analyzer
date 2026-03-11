@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Edit user · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<div class="stack-h" style="justify-content:space-between; gap:1rem; align-items:center;">
+    <div>
+        <h2>Edit user</h2>
+        <p class="muted">Update role, permissions, and profile details for <strong>{{ target_user.username }}</strong>.</p>
+    </div>
+    <a class="btn btn-ghost" href="{% url 'dashboard:admin_users_roles' %}">Back to users</a>
+</div>
+
+<section class="card-grid" style="margin-top:1rem;">
+    <article class="card">
+        <div class="card-title">Account</div>
+        <p class="card-sub">Email, role, and activation state.</p>
+
+        <form method="post" class="stack-v">
+            {% csrf_token %}
+            {{ update_form.as_p }}
+
+            {% if role_key == "customer" and customer_form %}
+                <hr style="border:none; border-top:1px solid rgba(0,0,0,.08); margin: .75rem 0;">
+                <div class="card-title" style="font-size:1rem;">Customer profile</div>
+                {{ customer_form.as_p }}
+            {% elif role_key == "agent" and agent_form %}
+                <hr style="border:none; border-top:1px solid rgba(0,0,0,.08); margin: .75rem 0;">
+                <div class="card-title" style="font-size:1rem;">Agent profile</div>
+                {{ agent_form.as_p }}
+                <p class="muted" style="margin-top:-.5rem;">
+                    Tip: Assign a team to enable team-based auto-assignment rules.
+                </p>
+            {% endif %}
+
+            <div class="stack-h" style="gap:.5rem; flex-wrap:wrap; margin-top:.5rem;">
+                <button type="submit" class="btn">Save changes</button>
+                <a class="btn btn-ghost" href="{% url 'dashboard:admin_users_roles' %}">Cancel</a>
+            </div>
+        </form>
+    </article>
+</section>
+{% endblock %}
+

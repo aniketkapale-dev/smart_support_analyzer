@@ -1,0 +1,417 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket {{ ticket.ticket_id }} · AI Support Ticket Analyzer{% endblock %}
+
+{% block content %}
+{% if show_submission_confirmation %}
+<div class="ticket-confirmation" role="alert">
+    <p class="ticket-confirmation-title">✅ Your ticket has been submitted</p>
+    <p class="ticket-confirmation-row"><strong>Ticket ID:</strong> {{ ticket.ticket_id }}</p>
+    <p class="ticket-confirmation-row"><strong>Status:</strong> {{ ticket.get_status_display }}</p>
+    <p class="ticket-confirmation-note">Support team will respond shortly.</p>
+</div>
+{% endif %}
+
+{% if is_customer and ticket.status == "resolved" %}
+<div class="ticket-resolved-banner" role="status">
+    <p class="ticket-resolved-title">✓ Ticket resolved</p>
+    <p class="ticket-resolved-note">The support team has marked this ticket as resolved. If the issue is fixed, you’re all set. If not, you can reopen the ticket below.</p>
+</div>
+{% endif %}
+
+<div class="ticket-header">
+    <h2>{{ ticket.ticket_id }} — {{ ticket.subject }}</h2>
+    <p class="ticket-meta muted">
+        Opened by {{ ticket.customer.username }}
+        on {{ ticket.created_at|date:"M j, Y H:i" }}
+        · <span class="status-badge status-badge-{{ ticket.status }}" title="{{ ticket.get_status_display }}"><span class="status-badge-dot"></span>{{ ticket.get_status_display }}</span>
+        {% if ticket.category %}· Category: {{ ticket.category.name }}{% endif %}
+        · Priority: {{ ticket.get_priority_display }}
+        {% if ticket.assigned_agent %}
+            · Assigned to {{ ticket.assigned_agent.username }}
+        {% endif %}
+    </p>
+</div>
+
+{% if is_agent or is_manager %}
+<section class="ticket-info-grid">
+    <article class="ticket-info-card">
+        <h3>Customer information</h3>
+        <div class="ticket-info-row"><span class="ticket-info-label">Name</span><span class="ticket-info-value">{{ ticket.customer.username }}</span></div>
+        <div class="ticket-info-row"><span class="ticket-info-label">Email</span><span class="ticket-info-value">{{ ticket.customer.email|default:"—" }}</span></div>
+        {% if customer_profile %}
+            {% if customer_profile.organization %}
+            <div class="ticket-info-row"><span class="ticket-info-label">Organization</span><span class="ticket-info-value">{{ customer_profile.organization }}</span></div>
+            {% endif %}
+            {% if customer_profile.phone_number %}
+            <div class="ticket-info-row"><span class="ticket-info-label">Phone</span><span class="ticket-info-value">{{ customer_profile.phone_number }}</span></div>
+            {% endif %}
+        {% endif %}
+
+        <div class="ticket-info-subtitle">Past tickets</div>
+        {% if customer_past_tickets %}
+            <ul class="ticket-history-list">
+                {% for t in customer_past_tickets %}
+                <li class="ticket-history-item">
+                    <a href="{% url 'tickets:detail' t.ticket_id %}" class="link-quiet">{{ t.ticket_id }}</a>
+                    <span class="muted">— {{ t.subject }}</span>
+                    <span class="status-badge status-badge-{{ t.status }}"><span class="status-badge-dot"></span>{{ t.get_status_display }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="muted">No past tickets.</p>
+        {% endif %}
+    </article>
+
+    <article class="ticket-info-card">
+        <h3>Ticket details</h3>
+        <div class="ticket-info-row"><span class="ticket-info-label">Subject</span><span class="ticket-info-value">{{ ticket.subject }}</span></div>
+        <div class="ticket-info-row"><span class="ticket-info-label">Category</span><span class="ticket-info-value">{% if ticket.category %}{{ ticket.category.name }}{% else %}—{% endif %}</span></div>
+        <div class="ticket-info-row"><span class="ticket-info-label">Priority</span><span class="ticket-info-value"><span class="priority-badge priority-{{ ticket.priority }}">{{ ticket.get_priority_display }}</span></span></div>
+        <div class="ticket-info-row"><span class="ticket-info-label">Status</span><span class="ticket-info-value"><span class="status-badge status-badge-{{ ticket.status }}"><span class="status-badge-dot"></span>{{ ticket.get_status_display }}</span></span></div>
+        <div class="ticket-info-row"><span class="ticket-info-label">Created</span><span class="ticket-info-value">{{ ticket.created_at|date:"M j, Y H:i" }}</span></div>
+        {% if ticket.assigned_agent %}
+        <div class="ticket-info-row"><span class="ticket-info-label">Assigned agent</span><span class="ticket-info-value">{{ ticket.assigned_agent.username }}</span></div>
+        {% endif %}
+    </article>
+
+    <article class="ticket-info-card">
+        <h3>AI insights</h3>
+        <div class="ticket-info-row">
+            <span class="ticket-info-label">Sentiment</span>
+            <span class="ticket-info-value">
+                <span class="ai-chip ai-chip-sentiment-{{ ticket.sentiment|default:'unknown' }}">{{ ticket.sentiment|default:"unknown"|title }}</span>
+            </span>
+        </div>
+        <div class="ticket-info-row">
+            <span class="ticket-info-label">Suggested Category</span>
+            <span class="ticket-info-value">{{ ticket.ai_suggested_category|default:"—" }}</span>
+        </div>
+        <div class="ticket-info-row">
+            <span class="ticket-info-label">Suggested Priority</span>
+            <span class="ticket-info-value">{% if ticket.ai_suggested_priority %}{{ ticket.ai_suggested_priority|title }}{% else %}—{% endif %}</span>
+        </div>
+        <p class="muted" style="margin-top:0.75rem; font-size:0.85rem;">
+            AI suggestions help managers prioritize faster. Final decisions remain with your team.
+        </p>
+    </article>
+</section>
+{% endif %}
+
+{% if is_manager %}
+<section class="ticket-section ticket-section-actions">
+    <h3>Assignment</h3>
+    <form method="post" action="{% url 'tickets:assign' ticket.ticket_id %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_team_id">Team</label>
+            <select id="id_team_id" name="team_id">
+                <option value="">All teams</option>
+                {% for team in teams %}
+                    <option value="{{ team.id }}">{{ team.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <label for="id_agent_id">Assign to agent</label>
+        <select id="id_agent_id" name="agent_id">
+            <option value="">-- Unassigned --</option>
+            {% for agent in agents %}
+                <option value="{{ agent.id }}" {% if ticket.assigned_agent_id == agent.id %}selected{% endif %}>{{ agent.username }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn">Update assignment</button>
+    </form>
+    {{ team_agent_map|json_script:"team-agent-map" }}
+    <script>
+    (function() {
+        var teamSelect = document.getElementById('id_team_id');
+        var agentSelect = document.getElementById('id_agent_id');
+        if (!teamSelect || !agentSelect) return;
+        var mapEl = document.getElementById('team-agent-map');
+        var map = mapEl ? JSON.parse(mapEl.textContent) : {};
+        var allOptions = Array.prototype.slice.call(agentSelect.querySelectorAll('option')).map(function(o) {
+            return { value: o.value, text: o.textContent, selected: o.selected, isPlaceholder: !o.value };
+        });
+        var render = function(teamId) {
+            var allowed = teamId && map[teamId] ? new Set(map[teamId].map(String)) : null;
+            agentSelect.innerHTML = '';
+            allOptions.forEach(function(opt) {
+                if (opt.isPlaceholder) {
+                    var o = document.createElement('option');
+                    o.value = opt.value;
+                    o.textContent = opt.text;
+                    agentSelect.appendChild(o);
+                    return;
+                }
+                if (!allowed || allowed.has(String(opt.value))) {
+                    var o2 = document.createElement('option');
+                    o2.value = opt.value;
+                    o2.textContent = opt.text;
+                    agentSelect.appendChild(o2);
+                }
+            });
+        };
+        teamSelect.addEventListener('change', function() { render(teamSelect.value); });
+    })();
+    </script>
+</section>
+{% endif %}
+
+{% if is_agent or is_manager %}
+<section class="ticket-section ticket-section-actions">
+    <h3>Status</h3>
+    <form method="post" action="{% url 'tickets:update_status' ticket.ticket_id %}">
+        {% csrf_token %}
+        <select name="status">
+            <option value="{{ ticket.status }}">{{ ticket.get_status_display }} (current)</option>
+            <option value="in_progress">In Progress</option>
+            <option value="waiting_for_customer">Pending (Waiting for Customer)</option>
+            <option value="escalated">Escalated to Manager</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+        </select>
+        <button type="submit" class="btn btn-ghost">Change status</button>
+    </form>
+</section>
+{% endif %}
+
+{% if is_agent or is_manager %}
+<section class="ticket-section ticket-section-actions ticket-agent-tools">
+    <h3>Agent tools</h3>
+    <div class="agent-tools-row">
+        <a class="btn btn-ghost" href="{% url 'knowledgebase:list' %}?q={{ ticket.subject|urlencode }}">Search Knowledge Base →</a>
+        {% if ticket.category %}
+            <a class="btn btn-ghost" href="{% url 'knowledgebase:list' %}?q={{ ticket.category.name|urlencode }}">KB: {{ ticket.category.name }}</a>
+        {% endif %}
+        <a class="btn btn-ghost" href="{% url 'tickets:list' %}?status=open&priority=urgent">Open urgent queue</a>
+    </div>
+
+    {% if suggested_articles %}
+    <div class="agent-kb-suggestions">
+        <div class="agent-kb-title">Suggested article{% if suggested_articles|length != 1 %}s{% endif %}</div>
+        <ul class="agent-kb-list">
+            {% for a in suggested_articles %}
+            <li class="agent-kb-item">
+                <a class="link-quiet agent-kb-link" href="{% url 'knowledgebase:detail' a.pk %}" target="_blank" rel="noopener">{{ a.title }}</a>
+                <button
+                    type="button"
+                    class="btn btn-ghost btn-insert-article"
+                    aria-label="Insert article into reply"
+                >
+                    Insert
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+        <p class="muted agent-kb-hint">Click “Insert” to paste the article link into your reply.</p>
+    </div>
+    {% endif %}
+
+    <p class="muted agent-tools-hint">
+        Use internal notes to capture investigation details (e.g. “Possible payment gateway issue. Checking with finance team”).
+    </p>
+
+    {% if is_agent or is_manager %}
+    <div class="agent-escalate">
+        <div class="agent-kb-title">Escalation</div>
+        <form method="post" action="{% url 'tickets:escalate_ticket' ticket.ticket_id %}">
+            {% csrf_token %}
+            <label for="id_escalation_reason" class="filter-label">Internal reason (optional)</label>
+            <textarea id="id_escalation_reason" name="reason" rows="3" placeholder="e.g. Payment gateway timeout suspected. Checking logs. Need manager decision." style="width:100%;"></textarea>
+            <div style="margin-top:0.5rem;">
+                <button type="submit" class="btn btn-danger">Escalate to Manager</button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
+
+<section class="ticket-conversation">
+    <h3>Conversation</h3>
+    <div class="chat-thread">
+        <div class="chat-message chat-message-customer">
+            <div class="chat-message-header">
+                <span class="chat-message-sender">Customer</span>
+                <span class="chat-message-time muted">{{ ticket.created_at|date:"M j, Y H:i" }}</span>
+            </div>
+            <div class="chat-message-body">
+                {{ ticket.description|urlize|linebreaksbr }}
+            </div>
+            {% if attachments_no_reply %}
+            <div class="chat-message-attachments">
+                {% for att in attachments_no_reply %}
+                <a href="{{ att.file.url }}" class="chat-attachment-link" target="_blank" rel="noopener">
+                    📎 {{ att.file.name|cut:"ticket_attachments/" }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        {% for reply in replies %}
+        <div class="chat-message chat-message-{% if reply.author_id == ticket.customer_id %}customer{% else %}agent{% endif %}{% if reply.is_internal %} chat-message-internal{% endif %}">
+            <div class="chat-message-header">
+                <span class="chat-message-sender">
+                    {% if reply.author_id == ticket.customer_id %}Customer{% elif reply.author %}{{ reply.author.username }}{% else %}Support{% endif %}
+                    {% if reply.is_internal %}<span class="chat-internal-tag">Internal</span>{% endif %}
+                </span>
+                <span class="chat-message-time muted">{{ reply.created_at|date:"M j, Y H:i" }}</span>
+            </div>
+            <div class="chat-message-body">
+                {{ reply.message|urlize|linebreaksbr }}
+            </div>
+            {% if reply.attachments.all %}
+            <div class="chat-message-attachments">
+                {% for att in reply.attachments.all %}
+                <a href="{{ att.file.url }}" class="chat-attachment-link" target="_blank" rel="noopener">
+                    📎 {{ att.file.name|cut:"ticket_attachments/" }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<section class="ticket-reply-section">
+    <h3>Add a reply</h3>
+    <p class="muted reply-hint">You can reply with text and attach files (screenshot, PDF, or any document).</p>
+    <form method="post" enctype="multipart/form-data" class="ticket-reply-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="id_message">Message</label>
+            {{ reply_form.message }}
+        </div>
+        {% if is_agent or is_manager %}
+        <div class="form-group form-group-inline">
+            <label>
+                {{ reply_form.is_internal }}
+                <span class="muted">Internal note (hidden from customer)</span>
+            </label>
+        </div>
+        {% endif %}
+        <div class="form-group">
+            <label for="id_attachments">Attach files</label>
+            <input id="id_attachments" type="file" name="attachments" multiple accept="image/*,.pdf,.doc,.docx">
+            <span class="form-hint">e.g. screenshot.png, document.pdf</span>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Send reply</button>
+        </div>
+    </form>
+</section>
+
+<section class="ticket-feedback-section">
+    {% if show_feedback_form and feedback_form %}
+    <div class="ticket-feedback-card">
+        <h3>How was your support experience?</h3>
+        <p class="muted feedback-subtitle">Your feedback helps us measure customer satisfaction (CSAT).</p>
+        <form method="post" action="{% url 'tickets:submit_feedback' ticket.ticket_id %}" class="ticket-feedback-form">
+            {% csrf_token %}
+            <div class="feedback-stars-wrap">
+                <span class="feedback-stars-label">Rating</span>
+                <div class="feedback-stars" role="group" aria-label="Rate 1 to 5 stars" id="feedback-stars">
+                    {% for i in "12345" %}
+                    <label class="star-label">
+                        <input type="radio" name="rating" value="{{ i }}" required class="star-input">
+                        <span class="star-icon" data-value="{{ i }}">☆</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="id_comment">Comment (optional)</label>
+                <input type="text" name="comment" id="id_comment" maxlength="500" placeholder="e.g. Great support!" class="feedback-comment-input">
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Submit feedback</button>
+            </div>
+        </form>
+    </div>
+    {% elif feedback %}
+    <div class="ticket-feedback-thanks">
+        <p class="feedback-thanks-title">Thank you for your feedback</p>
+        <p class="feedback-thanks-stars" aria-label="{{ feedback.rating }} out of 5 stars">
+            {% for i in "12345" %}
+                {% if forloop.counter <= feedback.rating %}⭐{% else %}☆{% endif %}
+            {% endfor %}
+        </p>
+        {% if feedback.comment %}
+        <p class="feedback-thanks-comment">"{{ feedback.comment }}"</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</section>
+
+<section class="ticket-customer-actions">
+    {% if is_customer %}
+        {% if ticket.status != "resolved" and ticket.status != "closed" %}
+        <form method="post" action="{% url 'tickets:customer_mark_resolved' ticket.ticket_id %}" class="mark-resolved-form">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">✓ Mark issue resolved</button>
+        </form>
+        <p class="muted mark-resolved-hint">Mark this when the issue is fixed and you don’t need further help.</p>
+        {% elif ticket.status == "resolved" or ticket.status == "closed" %}
+        <form method="post" action="{% url 'tickets:reopen' ticket.ticket_id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost">Reopen ticket</button>
+        </form>
+        {% endif %}
+    {% endif %}
+</section>
+
+<script>
+(function() {
+    var container = document.getElementById('feedback-stars');
+    if (container) {
+        var labels = container.querySelectorAll('.star-label');
+        var updateStars = function(value) {
+            var n = value ? parseInt(value, 10) : 0;
+            labels.forEach(function(label, i) {
+                var icon = label.querySelector('.star-icon');
+                if (icon) icon.textContent = (i + 1) <= n ? '⭐' : '☆';
+            });
+        };
+        container.addEventListener('change', function(e) {
+            if (e.target.name === 'rating') updateStars(e.target.value);
+        });
+        labels.forEach(function(label, i) {
+            label.addEventListener('mouseenter', function() { updateStars(String(i + 1)); });
+        });
+        container.addEventListener('mouseleave', function() {
+            var checked = container.querySelector('input[name=rating]:checked');
+            updateStars(checked ? checked.value : null);
+        });
+    }
+
+    // Knowledge Base: insert suggested article into reply
+    var replyBox = document.getElementById('id_message');
+    document.querySelectorAll('.btn-insert-article').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var item = btn.closest('.agent-kb-item');
+            if (!item) return;
+            var link = item.querySelector('.agent-kb-link');
+            if (!link) return;
+            var text = (link.textContent || 'Help article').trim() + ' — ' + link.href;
+            if (!replyBox) return;
+
+            var prefix = replyBox.value && !replyBox.value.endsWith('\n') ? '\n' : '';
+            var insert = prefix + text + '\n';
+
+            // Insert at cursor position
+            var start = replyBox.selectionStart || 0;
+            var end = replyBox.selectionEnd || 0;
+            var before = replyBox.value.slice(0, start);
+            var after = replyBox.value.slice(end);
+            replyBox.value = before + insert + after;
+            var pos = (before + insert).length;
+            replyBox.setSelectionRange(pos, pos);
+            replyBox.focus();
+        });
+    });
+})();
+</script>
+{% endblock %}

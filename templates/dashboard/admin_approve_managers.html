@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Approve Support Managers · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<h2>Approve Support Manager registrations</h2>
+<p class="muted">
+    Support Manager self-registrations require Administrator approval before they can sign in.
+</p>
+
+{% if pending %}
+<table class="table" style="margin-top:1rem;">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Requested</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for a in pending %}
+        <tr>
+            <td>{{ a.user.username }}</td>
+            <td>{{ a.user.email|default:"—" }}</td>
+            <td>{{ a.created_at|date:"M j, Y H:i" }}</td>
+            <td>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="approve">
+                    <input type="hidden" name="approval_id" value="{{ a.id }}">
+                    <button type="submit" class="btn">Approve</button>
+                </form>
+                <form method="post" style="display:inline; margin-left:0.5rem;" onsubmit="return confirm('Reject this registration?');">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="reject">
+                    <input type="hidden" name="approval_id" value="{{ a.id }}">
+                    <button type="submit" class="btn btn-danger">Reject</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="muted">No pending Support Manager registrations.</p>
+{% endif %}
+
+<p style="margin-top:1rem;"><a href="{% url 'dashboard:admin_users_roles' %}" class="link-quiet">← Users &amp; roles</a></p>
+{% endblock %}

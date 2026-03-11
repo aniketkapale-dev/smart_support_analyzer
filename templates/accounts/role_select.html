@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<section class="get-started-hero">
+    <div class="get-started-hero-inner">
+        <div>
+            <h1 class="get-started-title">Get started</h1>
+            <p class="get-started-sub">
+                Choose your role to sign in or self-register. Customers and Agents require Manager approval. Support Managers require Admin approval.
+            </p>
+            <div class="get-started-chips">
+                <span class="chip">Role-based access</span>
+                <span class="chip">Approval workflow</span>
+                <span class="chip">AI insights</span>
+            </div>
+        </div>
+        <div class="get-started-hero-card">
+            <div class="get-started-hero-card-title">Tip</div>
+            <p class="muted" style="margin:0;">
+                For a quick demo, create an Admin first, then approve a Support Manager, then approve an Agent/Customer and run a full ticket lifecycle.
+            </p>
+        </div>
+    </div>
+</section>
+
+<section class="card-grid" style="margin-top:1.25rem;">
+    <article class="card role-card">
+        <div class="card-title">Customer</div>
+        <p class="card-sub">Search Knowledge Base, submit tickets, upload attachments, and track status.</p>
+        <div class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+            <a href="{% url 'accounts:login' %}?role=customer" class="btn">Sign in</a>
+            <a href="{% url 'accounts:register' %}?role=customer" class="btn btn-ghost">Register</a>
+        </div>
+        <p class="muted" style="margin-top:.75rem;">Approval: <strong>Support Manager</strong></p>
+    </article>
+
+    <article class="card role-card">
+        <div class="card-title">Support Agent</div>
+        <p class="card-sub">Work assigned queue, reply in chat thread, add internal notes, update status.</p>
+        <div class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+            <a href="{% url 'accounts:login' %}?role=agent" class="btn">Sign in</a>
+            <a href="{% url 'accounts:register' %}?role=agent" class="btn btn-ghost">Register</a>
+        </div>
+        <p class="muted" style="margin-top:.75rem;">Approval: <strong>Support Manager</strong></p>
+    </article>
+
+    <article class="card role-card">
+        <div class="card-title">Support Manager</div>
+        <p class="card-sub">Assign tickets, monitor SLAs, approve registrations, review analytics.</p>
+        <div class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+            <a href="{% url 'accounts:login' %}?role=manager" class="btn">Sign in</a>
+            <a href="{% url 'accounts:register' %}?role=manager" class="btn btn-ghost">Register</a>
+        </div>
+        <p class="muted" style="margin-top:.75rem;">Approval: <strong>Admin</strong></p>
+    </article>
+
+    <article class="card role-card">
+        <div class="card-title">Admin</div>
+        <p class="card-sub">Manage users & roles, ticket settings, SLAs, channels, knowledge base, analytics.</p>
+        <div class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+            <a href="{% url 'accounts:login' %}?role=admin" class="btn">Admin login</a>
+        </div>
+        <p class="muted" style="margin-top:.75rem;">Full access</p>
+    </article>
+</section>
+{% endblock %}
+

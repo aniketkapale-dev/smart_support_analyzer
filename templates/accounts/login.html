@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Login · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<h2>
+    {% if role_label %}Login as {{ role_label }}{% else %}Login{% endif %}
+</h2>
+<form method="post" novalidate>
+    {% csrf_token %}
+    <div>
+        <label for="id_username">Username</label><br>
+        <input id="id_username" type="text" name="username" required>
+    </div>
+    <div style="margin-top: 0.75rem;">
+        <label for="id_password">Password</label><br>
+        <input id="id_password" type="password" name="password" required>
+    </div>
+    <div style="margin-top: 1rem;">
+        <button type="submit">Sign in</button>
+    </div>
+</form>
+<p class="muted" style="margin-top: 0.75rem;">
+    Don't have an account?
+    <a href="{% url 'accounts:register' %}" class="link-quiet">Register</a>
+</p>
+{% endblock %}
+

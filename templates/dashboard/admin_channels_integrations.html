@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Channels &amp; integrations · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<h2>Channels &amp; integrations</h2>
+<p class="muted">
+    Configure which channels can create tickets and which external tools are connected.
+</p>
+
+<section class="card-grid">
+    <article class="card">
+        <div class="card-title">Support channels</div>
+        <p class="card-sub">
+            Channels like email, chat, or phone that customers use to reach support.
+        </p>
+        <form method="post" style="margin-bottom:.75rem;">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="channel_preset">
+            <button type="submit" class="btn btn-ghost">Add example channels: Web form · Email · Live chat</button>
+        </form>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="channel">
+            {{ channel_form.as_p }}
+            <button type="submit" class="btn">Save channel</button>
+        </form>
+        <h4 style="margin-top:1rem;">Existing channels</h4>
+        {% if channels %}
+        <table class="table" style="margin-top:.5rem;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Slug</th>
+                    <th>Description</th>
+                    <th>Active</th>
+                    <th style="width:220px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ch in channels %}
+                <tr>
+                    <td><strong>{{ ch.name }}</strong></td>
+                    <td>{{ ch.slug }}</td>
+                    <td class="muted">{{ ch.description|default:"—" }}</td>
+                    <td>
+                        {% if ch.is_active %}
+                            <span class="status-badge status-open">Active</span>
+                        {% else %}
+                            <span class="status-badge status-closed">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+                            <form method="post" onsubmit="return confirm('Change active status for {{ ch.name }}?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="channel_toggle">
+                                <input type="hidden" name="channel_id" value="{{ ch.id }}">
+                                <button type="submit" class="btn {% if ch.is_active %}btn-danger{% else %}btn{% endif %}">
+                                    {% if ch.is_active %}Deactivate{% else %}Activate{% endif %}
+                                </button>
+                            </form>
+                            <form method="post" onsubmit="return confirm('Delete channel {{ ch.name }}?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="channel_delete">
+                                <input type="hidden" name="channel_id" value="{{ ch.id }}">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p class="muted">No channels configured yet.</p>
+        {% endif %}
+    </article>
+
+    <article class="card">
+        <div class="card-title">Integrations</div>
+        <p class="card-sub">
+            External systems that can send or receive updates about tickets.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="integration">
+            {{ integration_form.as_p }}
+            <button type="submit" class="btn">Save integration</button>
+        </form>
+        <h4 style="margin-top:1rem;">Existing integrations</h4>
+        <ul class="card-sub">
+            {% for integ in integrations %}
+                <li>
+                    <strong>{{ integ.name }}</strong>
+                    ({{ integ.get_provider_display }}):
+                    {% if integ.is_enabled %}enabled{% else %}disabled{% endif %}
+                </li>
+            {% empty %}
+                <li>No integrations configured yet.</li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endblock %}
+

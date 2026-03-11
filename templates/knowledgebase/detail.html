@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ article.title }} · Knowledge Base{% endblock %}
+
+{% block content %}
+<p class="muted" style="margin-bottom:0.5rem;">
+    <a href="{% url 'knowledgebase:list' %}{% if request.GET.q %}?q={{ request.GET.q|urlencode }}{% endif %}" class="link-quiet">← Back to Knowledge Base</a>
+</p>
+
+<h2>{{ article.title }}</h2>
+<p class="muted">
+    {% if article.category %}
+        {{ article.category.name }}
+    {% else %}
+        Uncategorized
+    {% endif %}
+    · {{ article.created_at|date:"Y-m-d H:i" }}
+</p>
+
+<section style="margin-top:1rem;">
+    {{ article.content|linebreaks }}
+</section>
+
+{% if related_articles %}
+<section style="margin-top:1.5rem;">
+    <h3>Related articles</h3>
+    <ul class="card-sub">
+        {% for other in related_articles %}
+            <li>
+                <a href="{% url 'knowledgebase:detail' other.pk %}{% if request.GET.q %}?q={{ request.GET.q|urlencode }}{% endif %}" class="link-quiet">
+                    {{ other.title }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+<p style="margin-top:1.5rem; padding:1rem; background:#f8fafc; border-radius:8px;">
+    <strong>Did this solve your issue?</strong> If not,
+    <a href="{% url 'tickets:create' %}">create a support ticket</a> and we'll help you.
+</p>
+{% endblock %}
+

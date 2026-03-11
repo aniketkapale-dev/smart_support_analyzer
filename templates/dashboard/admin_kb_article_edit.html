@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Edit KB article · Smart Support Analyzer{% endblock %}
+
+{% block content %}
+<div class="stack-h" style="justify-content:space-between; gap:1rem; align-items:center;">
+    <div>
+        <h2>Edit article</h2>
+        <p class="muted">Update content, category, tags, and publish status for <strong>{{ article.title }}</strong>.</p>
+    </div>
+    <a class="btn btn-ghost" href="{% url 'dashboard:admin_kb_articles' %}">Back to Knowledge Base</a>
+</div>
+
+<section class="card-grid" style="margin-top:1rem;">
+    <article class="card">
+        <div class="card-title">Article details</div>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="stack-h" style="gap:.5rem; flex-wrap:wrap;">
+                <button type="submit" class="btn">Save changes</button>
+                <a class="btn btn-ghost" href="{% url 'dashboard:admin_kb_articles' %}">Cancel</a>
+            </div>
+        </form>
+    </article>
+</section>
+{% endblock %}
+
